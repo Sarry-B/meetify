@@ -3,11 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [form, setForm] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
@@ -19,9 +15,9 @@ function Login() {
     e.preventDefault();
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", form);
-      localStorage.setItem("token", res.data.token); // שמירת הטוקן
+      localStorage.setItem("token", res.data.token);
       setMessage("Login successful!");
-      navigate("/dashboard"); // מעבר לדשבורד
+      navigate("/dashboard");
     } catch (err) {
       setMessage("Login failed.");
       console.error(err.response?.data || err.message);
@@ -29,32 +25,37 @@ function Login() {
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "50px auto", fontFamily: "sans-serif" }}>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          name="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={handleChange}
-          required
-          type="email"
-          style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
-        />
-        <input
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-          type="password"
-          style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
-        />
-        <button type="submit" style={{ width: "100%", padding: "10px" }}>
-          Login
-        </button>
-      </form>
-      <p>{message}</p>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full border px-4 py-2 rounded"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            className="w-full border px-4 py-2 rounded"
+          />
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+          >
+            Login
+          </button>
+        </form>
+        {message && <p className="mt-4 text-center text-red-500">{message}</p>}
+      </div>
     </div>
   );
 }
