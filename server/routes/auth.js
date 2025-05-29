@@ -14,7 +14,9 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
 
     const user = await User.create({ name, email, password });
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
+    
+    // 👇 מוסיפים גם את name
+    const token = jwt.sign({ id: user._id, name: user.name }, JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token });
   } catch (err) {
@@ -31,11 +33,12 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
+    // 👇 גם פה מוסיפים את name
+    const token = jwt.sign({ id: user._id, name: user.name }, JWT_SECRET, { expiresIn: '1h' });
+
     res.json({ token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
 module.exports = router;
