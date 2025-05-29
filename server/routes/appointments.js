@@ -1,17 +1,16 @@
 const express = require('express');
 const Appointment = require('../models/Appointment');
-const authMiddleware = require('../middleware/auth');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Create a new appointment (requires authentication)
-router.post('/appointments', authMiddleware, async (req, res) => {
-  const { title, date } = req.body;
+// יצירת פגישה
+router.post('/appointments', auth, async (req, res) => {
   try {
     const appointment = await Appointment.create({
-      title,
-      date,
-      user: req.user.id
+      userId: req.user.id,
+      title: req.body.title,
+      date: req.body.date,
     });
     res.json(appointment);
   } catch (err) {
@@ -19,14 +18,42 @@ router.post('/appointments', authMiddleware, async (req, res) => {
   }
 });
 
-// Get all appointments for the authenticated user
-router.get('/appointments', authMiddleware, async (req, res) => {
+// קבלת כל הפגישות של המשתמש
+router.get('/appointments', auth, async (req, res) => {
   try {
-    const appointments = await Appointment.find({ user: req.user.id });
+    const appointments = await Appointment.find({ userId: req.user.id });
     res.json(appointments);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
+// מחיקת פגישה
+router.delete('/appointments/:id', auth, async (req, res) => {
+  try {
+    const deleted = await Appointment.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user.id,
+    });
+    if (!deleted) return res.status(404).json({ message: 'Appointment not found' });
+    res.json({ message: 'Deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// עדכון פגישה
+router.put('/appointments/:id', auth, async (req, res) => {
+  try {
+    const updated = await Appointment.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { title: req.body.title, date: req.body.date },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'Appointment not found' });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;
