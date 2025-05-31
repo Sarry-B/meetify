@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
 function Appointments() {
   const [appointments, setAppointments] = useState([]);
   const [form, setForm] = useState({ title: "", date: "" });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [editingId, setEditingId] = useState(null); // מזהה את הפגישה שנערכת
+  const [message, setMessage] = useState("");
 
   const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
 
   const fetchAppointments = async () => {
     try {
@@ -20,139 +23,90 @@ function Appointments() {
     }
   };
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
     try {
-      if (editingId) {
-        await axios.put(
-          `http://localhost:5000/api/appointments/${editingId}`,
-          form,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setEditingId(null);
-      } else {
-        await axios.post("http://localhost:5000/api/appointments", form, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
-
+      const res = await axios.post("http://localhost:5000/api/appointments", form, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAppointments([...appointments, res.data]);
       setForm({ title: "", date: "" });
-      fetchAppointments();
+      setMessage("Appointment added successfully!");
     } catch (err) {
-      console.error("Error saving appointment:", err);
+      setMessage("Failed to add appointment.");
+      console.error(err);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this appointment?")) return;
     try {
       await axios.delete(`http://localhost:5000/api/appointments/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchAppointments();
+      setAppointments(appointments.filter((a) => a._id !== id));
+      setMessage("Appointment deleted.");
     } catch (err) {
-      console.error("Error deleting appointment:", err);
+      setMessage("Failed to delete appointment.");
+      console.error(err);
     }
   };
 
-  const handleEdit = (appt) => {
-    setForm({ title: appt.title, date: appt.date.slice(0, 16) }); // format ל־datetime-local
-    setEditingId(appt._id);
-  };
-
-  const filteredAppointments = appointments.filter((appt) =>
-    appt.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
-    <div className="mt-10 text-left">
-      <h3 className="text-xl font-semibold mb-4 text-gray-800">Your Appointments</h3>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-blue-200 py-10 px-4">
+      <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+        <h2 className="text-3xl font-bold mb-6 text-center text-indigo-700">Your Appointments</h2>
 
-      <input
-        type="text"
-        placeholder="Search by title..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full mb-4 px-4 py-2 border rounded"
-      />
-
-      <form onSubmit={handleSubmit} className="space-y-4 mb-6">
-        <input
-          type="text"
-          name="title"
-          value={form.title}
-          onChange={handleChange}
-          placeholder="Appointment title"
-          required
-          className="w-full px-4 py-2 border rounded"
-        />
-        <input
-          type="datetime-local"
-          name="date"
-          value={form.date}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 border rounded"
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition"
-        >
-          {editingId ? "Update Appointment" : "Add Appointment"}
-        </button>
-        {editingId && (
-          <button
-            type="button"
-            onClick={() => {
-              setEditingId(null);
-              setForm({ title: "", date: "" });
-            }}
-            className="ml-4 px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400 transition"
-          >
-            Cancel
-          </button>
+        {message && (
+          <div className="mb-4 text-center text-sm text-green-600 font-medium transition-opacity duration-500">
+            {message}
+          </div>
         )}
-      </form>
 
-      <ul className="space-y-3">
-        {filteredAppointments.map((appt) => (
-          <li
-            key={appt._id}
-            className="p-4 bg-gray-50 border rounded shadow-sm flex justify-between items-center"
+        <form onSubmit={handleAdd} className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <input
+            name="title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            placeholder="Appointment Title"
+            required
+            className="col-span-1 sm:col-span-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          <input
+            name="date"
+            type="date"
+            value={form.date}
+            onChange={(e) => setForm({ ...form, date: e.target.value })}
+            required
+            className="col-span-1 sm:col-span-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+          <button
+            type="submit"
+            className="col-span-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition"
           >
-            <div>
-              <strong>{appt.title}</strong> –{" "}
-              <span className="text-gray-500">
-                {new Date(appt.date).toLocaleString()}
-              </span>
-            </div>
-            <div className="space-x-2">
-              <button
-                onClick={() => handleEdit(appt)}
-                className="text-blue-600 hover:underline"
-              >
-                Edit
-              </button>
+            Add
+          </button>
+        </form>
+
+        <ul className="space-y-4">
+          {appointments.map((appt) => (
+            <li
+              key={appt._id}
+              className="bg-indigo-50 px-4 py-3 rounded-lg flex justify-between items-center shadow-md transition duration-300 hover:bg-indigo-100"
+            >
+              <div>
+                <p className="font-medium text-indigo-800">{appt.title}</p>
+                <p className="text-sm text-gray-600">{new Date(appt.date).toLocaleDateString()}</p>
+              </div>
               <button
                 onClick={() => handleDelete(appt._id)}
-                className="text-red-600 hover:underline"
+                className="text-sm text-red-500 hover:text-red-700"
               >
                 Delete
               </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

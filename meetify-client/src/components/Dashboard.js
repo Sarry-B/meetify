@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
-import Appointments from './Appointments';
+import Appointments from "./Appointments";
+import ThemeToggle from "./ThemeToggle"; // ← זה השילוב החשוב
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -25,21 +26,23 @@ function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-2xl mx-auto bg-white shadow rounded-lg p-8 text-center">
-        <h2 className="text-3xl font-bold mb-2 text-gray-800">Welcome, {name}!</h2>
-        <p className="text-gray-600 mb-6">You are successfully logged in to Meetify.</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white relative px-4 py-8">
+      <ThemeToggle /> {/* ← כאן בדיוק תכניס אותו */}
+      
+      <h2 className="text-3xl font-bold text-center mb-2">
+        Welcome{ name ? `, ${name}` : "" }!
+      </h2>
+      <p className="text-center mb-4">You are successfully logged in.</p>
+      <div className="text-center mb-8">
         <button
           onClick={handleLogout}
-          className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition"
+          className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
         >
           Logout
         </button>
-
-        <hr className="my-8" />
-
-        <Appointments />
       </div>
+
+      <Appointments /> {/* קומפוננטת הפגישות */}
     </div>
   );
 }
